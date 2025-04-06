@@ -1,0 +1,50 @@
+{
+  debug
+}
+
+:9898 {
+  root * /web
+  file_server
+  encode gzip
+
+	reverse_proxy /api/files/* {$CS_FILE_ADDRESS} {
+	}
+	reverse_proxy /api/geo/* {$CS_GEO_ADDRESS} {
+	}
+	reverse_proxy /api/shorten/* {$CS_SHORTURL_SERVER_ADDRESS} {
+	}
+	reverse_proxy /api/crm/* {$CS_CRM_ADDRESS} {
+	}
+	reverse_proxy /api/auth/* {$CS_AUTH_ADDRESS} {
+	}
+	reverse_proxy /api/ws {$CS_API_ADDRESS} {
+	}
+	reverse_proxy /api/v2/* {$CS_API_V2_ADDRESS} {
+	}
+	reverse_proxy /api/* {$CS_API_ADDRESS} {
+	}
+	reverse_proxy /s/* {$CS_SHORTURL_SERVER_ADDRESS} {
+	}
+
+	rewrite /solution /
+	rewrite /workbench /
+	rewrite /portal /
+	rewrite /templates /
+	rewrite /table /
+	rewrite /share /
+	rewrite /preview /
+	rewrite /embed /
+	rewrite /signIn /
+	rewrite /signUp /
+	rewrite /forgotPassword /
+	rewrite /resetPwd /
+	rewrite /resetPwdWithPhoneNumber /
+	rewrite /signUpSuccess /
+	rewrite /approvalrequest /
+	rewrite /updaterequest /
+	rewrite /invite /
+	rewrite /organizationManagement /
+	rewrite /personalSetting /
+	rewrite /icons /
+	rewrite /forgotOrganization /
+}
