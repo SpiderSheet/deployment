@@ -1,0 +1,114 @@
+version: "3.9"
+
+services:
+  api-server:
+    image: ${IMAGE_REGISTRY}/${IMAGE_API_SERVER}
+    restart: always
+    expose:
+      - "9899"
+    env_file:
+      - "${ENV_FILE:-.env}"
+    environment:
+      - GIN_MODE=release
+    networks:
+      - spidersheet
+    volumes:
+     - web-root:/dist/
+     - ./bases:/bases
+    depends_on:
+      db:
+        condition: service_healthy
+      # auth-server:
+      #   condition: service_healthy
+  auth-server:
+    image: ${IMAGE_REGISTRY}/${IMAGE_AUTH_SERVER}
+    restart: always
+    expose:
+      - "9897"
+    env_file:
+      - "${ENV_FILE:-.env}"
+    environment:
+      - GIN_MODE=release
+    networks:
+      - spidersheet
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://127.0.0.1:9897/api/auth/ping"]
+    #   interval: 5s
+    #   timeout: 2s
+    #   retries: 5
+    #   start_period: 5s
+    depends_on:
+      db:
+        condition: service_healthy
+  file-server:
+    image: ${IMAGE_REGISTRY}/${IMAGE_FILE_SERVER}
+    restart: always
+    expose:
+      - "9895"
+    env_file:
+      - "${ENV_FILE:-.env}"
+    environment:
+      - GIN_MODE=release
+    networks:
+      - spidersheet
+    depends_on:
+      - file-storage
+  db:
+    image:  ${IMAGE_REGISTRY}/${IMAGE_POSTGRESQL}
+    restart: always
+    shm_size: 128mb
+    env_file:
+      - "${ENV_FILE:-.env}"
+    ports:
+      - 0.0.0.0:5432:5432
+    networks:
+      - spidersheet
+    volumes:
+     - ./data:/var/lib/postgresql/data
+     - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "bash", "-c", "pg_isready -U ${POSTGRES_USER} -d apidb && pg_isready -U ${POSTGRES_USER} -d authdb && pg_isready -U ${POSTGRES_USER} -d historydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  file-storage:
+    image: ${IMAGE_REGISTRY}/${IMAGE_MINIO}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - spidersheet
+    env_file:
+      - "${ENV_FILE:-.env}"
+    volumes:
+      - ./blob:/data
+    command: server /data --console-address ":9001"
+  caddy:
+    image: ${IMAGE_REGISTRY}/${IMAGE_CADDY}
+    ports:
+      - "9898:9898"
+    env_file:
+      - "${ENV_FILE:-.env}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - web-root:/web
+    networks:
+      - spidersheet
+    depends_on:
+      api-server:
+        condition: service_started
+      auth-server:
+        condition: service_started
+  adminer:
+    image: adminer
+    restart: always
+    networks:
+      - spidersheet
+    ports:
+      - 18001:8080
+networks:
+  spidersheet:
+    name: spidersheet_default
+    driver: bridge
+volumes:
+  web-root:
