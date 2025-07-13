@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   api-server:
-    image: ${IMAGE_REGISTRY}/${IMAGE_API_SERVER}
+    image: ${SPIDERSHEET_IMAGE_REGISTRY}/${IMAGE_API_SERVER}
     restart: always
     expose:
       - "9899"
@@ -21,7 +21,7 @@ services:
       # auth-server:
       #   condition: service_healthy
   auth-server:
-    image: ${IMAGE_REGISTRY}/${IMAGE_AUTH_SERVER}
+    image: ${SPIDERSHEET_IMAGE_REGISTRY}/${IMAGE_AUTH_SERVER}
     restart: always
     expose:
       - "9897"
@@ -41,7 +41,7 @@ services:
       db:
         condition: service_healthy
   file-server:
-    image: ${IMAGE_REGISTRY}/${IMAGE_FILE_SERVER}
+    image: ${SPIDERSHEET_IMAGE_REGISTRY}/${IMAGE_FILE_SERVER}
     restart: always
     expose:
       - "9895"
